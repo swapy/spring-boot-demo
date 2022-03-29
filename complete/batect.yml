@@ -23,15 +23,15 @@ containers:
     build_directory: .batect/international-transfers-service
     dependencies:
       - database
-    environment:
-        SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
-        SPRING_DATASOURCE_USERNAME: springuser
-        SPRING_DATASOURCE_PASSWORD: ThePassword
-        SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/db_example
-        SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQL8Dialect  
-        SPRING_JPA_DATABASE: mysql  
-        SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect  
-        SPRING_JPA_HIBERNATE_DDL_AUTO: update    
+    # environment:
+    # SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+    # SPRING_DATASOURCE_USERNAME: springuser
+    # SPRING_DATASOURCE_PASSWORD: ThePassword
+    # SPRING_DATASOURCE_URL: jdbc:mysql://database:3306/db_example
+    # SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQL8Dialect  
+    # SPRING_JPA_DATABASE: mysql  
+    # SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect  
+    # SPRING_JPA_HIBERNATE_DDL_AUTO: update    
 
 
 tasks:
