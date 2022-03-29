@@ -1,0 +1,73 @@
+project_name: accounts
+
+containers:
+  database:
+    image: mysql
+    ports:
+      - local: 3306
+        container: 3306
+    environment:
+      MYSQL_USER: springuser
+      MYSQL_PASSWORD: ThePassword
+      MYSQL_DATABASE: db_example
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - local: ./sql/schema.sql
+        container: /docker-entrypoint-initdb.d/schema.sql
+        options: ro
+#      - "./sql/schema.sql:/docker-entrypoint-initdb.d/schema.sql"
+    health_check:
+      command: "mysql $MYSQL_DATABASE -u$MYSQL_USER -p$MYSQL_PASSWORD -e 'SELECT 1;'"
+
+  international-transfers-service:
+    build_directory: .batect/international-transfers-service
+    dependencies:
+      - database
+    environment:
+        SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+        SPRING_DATASOURCE_USERNAME: springuser
+        SPRING_DATASOURCE_PASSWORD: ThePassword
+        SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/db_example
+        SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQL8Dialect  
+        SPRING_JPA_DATABASE: mysql  
+        SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect  
+        SPRING_JPA_HIBERNATE_DDL_AUTO: update    
+
+
+tasks:
+  build:
+    description: Build the application.
+    group: Build tasks
+    run:
+      container: java-build-env
+      command: ./gradlew clean build copyDocs --info
+  hello:
+    description: Build the application.
+    group: Build tasks
+    run:
+      container: java-build-env
+      command: echo "hello world"
+  run:
+    description: Run the application.
+    group: Test tasks
+    prerequisites:
+      - build
+    run:
+      container: international-transfers-service
+      ports:
+        - local: 8080
+          container: 8080
+  shell:
+    description: Start a shell in the development environment.
+    group: Utility tasks
+    run:
+      container: java-build-env
+      command: /bin/sh
+
+include:
+  - type: git
+    repo: https://github.com/XI1998-swapnilmarathe/java-bundle.git
+    ref: 1.0.0
+#  - type: file
+#    path: /Users/swapnilmarathe/Documents/KMBL/POC/java-bundle/batect-bundle.yml
+##    ref: 0.1.0

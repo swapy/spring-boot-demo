@@ -2,11 +2,15 @@ plugins {
 	id 'org.springframework.boot' version '2.6.3'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
+	id 'com.github.johnrengelman.shadow' version '7.1.2'
+
 }
+
+//apply plugin: 'application'
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '1.8'
+sourceCompatibility = '17'
 
 repositories {
 	mavenCentral()
@@ -22,3 +26,23 @@ dependencies {
 test {
 	useJUnitPlatform()
 }
+
+shadowJar {
+	destinationDirectory = file('.batect/international-transfers-service')
+//	archiveClassifier = ''
+//	archiveVersion = ''
+}
+
+//mainClassName = 'com.example.accessingdatamysql.AccessingDataMysqlApplication'
+//jar{
+//	enabled=true
+//}
+
+task copyDocs(type: Copy) {
+	from("$buildDir/libs/accessing-data-mysql-0.0.1-SNAPSHOT.jar") {
+//		rename 'accessing-data-mysql.jar'
+	}
+	into(".batect/international-transfers-service")
+}
+
+//compileJava.dependsOn("copyDocs");

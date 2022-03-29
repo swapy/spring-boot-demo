@@ -1,13 +1,38 @@
-mysql:
-  image: mysql
-  ports:
-    - "3306:3306"
-  expose:
-    - "3306"
-  environment:
-    - MYSQL_USER=springuser
-    - MYSQL_PASSWORD=ThePassword
-    - MYSQL_DATABASE=db_example
-    - MYSQL_ROOT_PASSWORD=root
-  volumes:
-    - "./conf.d:/etc/mysql/conf.d:ro"
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql
+    ports:
+      - "3306:3306"
+    expose:
+      - "3306"
+    environment:
+      - MYSQL_USER=springuser
+      - MYSQL_PASSWORD=ThePassword
+      - MYSQL_DATABASE=db_example
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - "./sql/schema.sql:/docker-entrypoint-initdb.d/schema.sql"
+  #    - "./scripts/data.sql:/docker-entrypoint-initdb.d/2.sql"
+
+  accounts-international-transfers-service-dock:
+    build: ./.batect/international-transfers-service/
+    image: accounts-international-transfers-service
+    ports:
+      - "8080:8080"
+    expose:
+      - "8080"
+    depends_on:
+        - mysql
+    links:
+      - "mysql:database"
+    environment:
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      - SPRING_DATASOURCE_USERNAME=springuser
+      - SPRING_DATASOURCE_PASSWORD=ThePassword
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/db_example
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQL8Dialect  
+      - SPRING_JPA_DATABASE=mysql  
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQL8Dialect  
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
