@@ -4,7 +4,6 @@ spring:
     username: springuser
 #    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/db_example
     url: jdbc:mysql://database:3306/db_example
-    # url: jdbc:mysql://0.0.0.0:3306/db_example
     password: ThePassword
   jpa:
     database-platform: org.hibernate.dialect.MySQL8Dialect

@@ -14,25 +14,25 @@ services:
       - MYSQL_ROOT_PASSWORD=root
     volumes:
       - "./sql/schema.sql:/docker-entrypoint-initdb.d/schema.sql"
-  #    - "./scripts/data.sql:/docker-entrypoint-initdb.d/2.sql"
 
-  accounts-international-transfers-service-dock:
-    build: ./.batect/international-transfers-service/
-    image: accounts-international-transfers-service
+  accounts-service:
+    image: com.demo/demo-mysql
     ports:
       - "8080:8080"
     expose:
       - "8080"
     depends_on:
-        - mysql
+         - mysql
     links:
-      - "mysql:database"
-    environment:
-      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
-      - SPRING_DATASOURCE_USERNAME=springuser
-      - SPRING_DATASOURCE_PASSWORD=ThePassword
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/db_example
-      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQL8Dialect  
-      - SPRING_JPA_DATABASE=mysql  
-      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQL8Dialect  
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+     - "mysql:database"
+    environment: {}
+      # - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      # - SPRING_DATASOURCE_USERNAME=springuser
+      # - SPRING_DATASOURCE_PASSWORD=ThePassword
+      # - SPRING_DATASOURCE_URL=jdbc:mysql://database:3306/db_example
+      # - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQL8Dialect
+      # - SPRING_JPA_DATABASE=mysql
+      # - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQL8Dialect
+      # - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+volumes:
+  gradle-cache:

@@ -2,47 +2,113 @@ plugins {
 	id 'org.springframework.boot' version '2.6.3'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
-	id 'com.github.johnrengelman.shadow' version '7.1.2'
-
+	id 'com.google.cloud.tools.jib' version '3.2.0'
 }
 
-//apply plugin: 'application'
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'
 
+apply from: 'docker-config.gradle'
 repositories {
 	mavenCentral()
 }
 
+//Configures the compile and runtime configurations for our integration tests
+//and includes the dependencies of the test task.
+configurations {
+	integrationTestCompile.extendsFrom testCompile
+	integrationTestRuntime.extendsFrom testRuntime
+	integrationTestImplementation.extendsFrom testImplementation
+}
+
+sourceSets {
+	integrationTest {
+		java {
+			compileClasspath += main.output + test.output
+			runtimeClasspath += main.output + test.output
+			srcDir file('src/integration-test/java')
+		}
+		resources.srcDir file('src/integration-test/resources')
+	}
+}
+
 dependencies {
+	implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	runtimeOnly 'mysql:mysql-connector-java'
+
+//	runtimeClasspath 'mysql:mysql-connector-java'
+//
+//	integrationTestRuntime 'mysql:mysql-connector-java'
+//	runtimeClasspath 'mysql:mysql-connector-java'
+	integrationTestRuntime 'mysql:mysql-connector-java'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.assertj:assertj-core:3.22.0'
+	testImplementation 'org.junit.jupiter:junit-jupiter'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.assertj:assertj-core:3.22.0'
+	testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
-test {
+jar {
+	enabled = false
+}
+
+tasks.named("bootJar") {
+	layered {
+		enabled = true
+	}
+
+}
+
+tasks.named("bootBuildImage") {
+	imageName="com.demo/demo-mysql:latest"
+	verboseLogging=true
+
+	buildpacks = ["gcr.io/paketo-buildpacks/azul-zulu", "urn:cnb:builder:paketo-buildpacks/java"]
+	environment = [
+			"BP_JVM_VERSION" : "17.0.*",
+			"BP_JVM_TYPE":"JRE",
+			"BPE_OVERRIDE_SERVER_PORT":"8080",
+			"BPE_OVERRIDE_TZ":"Asia/Kolkata"
+	]
+
+	//#ref - https://docs.spring.io/spring-boot/docs/current/gradle-plugin/reference/htmlsingle/#build-image.examples.caches
+	//version bumping should not cause recreating caches.
+	buildCache {
+		volume {
+			name = "cache-${rootProject.name}.build"
+		}
+	}
+	launchCache {
+		volume {
+			name = "cache-${rootProject.name}.launch"
+		}
+	}
+}
+
+tasks.withType(Test) {
 	useJUnitPlatform()
 }
 
-shadowJar {
-	destinationDirectory = file('.batect/international-transfers-service')
-//	archiveClassifier = ''
-//	archiveVersion = ''
+//Create the task that runs the integration tests found from the
+//configured source directory and uses the correct classpath.
+task integrationTest(type: Test) {
+//	useJUnitPlatform()
+	description 'Runs the integration tests.'
+	group 'Verification'
+	testClassesDirs = sourceSets.integrationTest.output.classesDirs
+	classpath = sourceSets.integrationTest.runtimeClasspath
+	//If you want to ensure that integration tests are run every time when you invoke
+	//this task, uncomment the following line.
+	//outputs.upToDateWhen { false }
 }
 
-//mainClassName = 'com.example.accessingdatamysql.AccessingDataMysqlApplication'
-//jar{
-//	enabled=true
-//}
-
-task copyDocs(type: Copy) {
-	from("$buildDir/libs/accessing-data-mysql-0.0.1-SNAPSHOT.jar") {
-//		rename 'accessing-data-mysql.jar'
-	}
-	into(".batect/international-transfers-service")
-}
-
-//compileJava.dependsOn("copyDocs");
+//Ensure that the check task fails the build if there are failing integration tests.
+check.dependsOn integrationTest
+//Ensure that our unit tests are run before our integration tests
+integrationTest.mustRunAfter test
